@@ -1,101 +1,202 @@
-import Image from 'next/image';
+'use client';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{' '}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import AssetDetails from '@/components/assets-details';
+import { CriticalIcon, EnergyIcon } from '@public/icons';
+import { Button } from '@/components/ui/buttons';
+import { LoadingPage } from '@/components/Pages/loading';
+import { useCompany } from '@/contexts/company-context';
+import { fetchCompanyData } from '@/services/fetch-company';
+import { TreeNode } from '@/types/tree';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import Tree from '@/components/Tree';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function HomePage() {
+  const { company } = useCompany();
+
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [filteredData, setFilteredData] = useState<TreeNode[]>([]);
+  const [filterStatus, setFilterStatus] = useState<'energy' | 'alert' | null>(
+    null
+  );
+  const [searchTerms, setSearchTerms] = useState<string>('');
+
+  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+
+  const handleSearch = useCallback(
+    (value: string) => setSearchTerms(value),
+    []
+  );
+
+  const resetStates = () => {
+    setTreeData([]);
+    setFilteredData([]);
+    setFilterStatus(null);
+    setSearchTerms('');
+    setSelectedNode(null);
+  };
+
+  useEffect(() => {
+    if (company) {
+      resetStates();
+
+      fetchCompanyData(company.id)
+        .then((data) => {
+          setTreeData(data);
+          setFilteredData(data);
+        })
+        .catch(console.error);
+    }
+  }, [company]);
+
+  const applyFilters = useCallback(
+    (nodes: TreeNode[]): TreeNode[] => {
+      const nodeMatchesFilters = (node: TreeNode) => {
+        const nameMatch = node.name
+          .toLowerCase()
+          .includes(searchTerms.toLowerCase());
+        const energyMatch =
+          filterStatus !== 'energy' ||
+          ('sensorType' in node && node.sensorType === 'energy');
+        const criticalMatch =
+          filterStatus !== 'alert' ||
+          ('status' in node && node.status === 'alert');
+        return nameMatch && energyMatch && criticalMatch;
+      };
+
+      const hasMatchingDescendant = (node: TreeNode): boolean => {
+        if (nodeMatchesFilters(node)) return true;
+        if ('children' in node) {
+          return node.children.some((child) => hasMatchingDescendant(child));
+        }
+        return false;
+      };
+
+      return nodes.reduce<TreeNode[]>((acc, node) => {
+        if (hasMatchingDescendant(node)) {
+          const filteredNode = {
+            ...node,
+            children: 'children' in node ? applyFilters(node.children) : [],
+          };
+          acc.push(filteredNode);
+        }
+        return acc;
+      }, []);
+    },
+    [filterStatus, searchTerms]
+  );
+
+  useEffect(() => {
+    if (!filterStatus && !searchTerms) {
+      setFilteredData(treeData);
+    } else {
+      const filteredNodes = applyFilters(treeData);
+      setFilteredData(filteredNodes);
+    }
+  }, [filterStatus, searchTerms, treeData, applyFilters]);
+
+  if (!company) {
+    return (
+      <div className="bg-background p-2">
+        <div className="flex justify-center self-center items-center h-[calc(100vh-64px)] bg-gray-100 border-2 border-dashed border-gray-300 rounded-md">
+          <h1 className="text-2xl font-thin mb-4 text-center">
+            Selecione uma empresa
+          </h1>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-background p-2">
+      <div className="rounded-md bg-white flex flex-col md:h-full sm:p-5 p-2 ">
+        <nav
+          className="flex sm:flex-row flex-col sm:items-center justify-between py-0.5 mb-4 "
+          aria-label="Filtros e navegação"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <div className="flex gap-2 items-center text-sm text-neutral-400">
+            <div className="text-black text-xl font-semibold">Ativos</div>
+            <span aria-hidden="true">/</span>
+            <span>{company.name}</span>
+          </div>
+          <div
+            className="flex flex-wrap gap-2 items-center"
+            role="group"
+            aria-label="Filtros de ativos"
+          >
+            <Button
+              variant="outline"
+              icon={
+                <EnergyIcon
+                  {...(filterStatus === 'energy' && { fill: '#fff' })}
+                />
+              }
+              size={'lg'}
+              onClick={() =>
+                setFilterStatus(filterStatus === 'energy' ? null : 'energy')
+              }
+              active={filterStatus === 'energy'}
+              aria-pressed={filterStatus === 'energy'}
+              aria-label="Filtrar por sensor de energia"
+              className="max-sm:w-full"
+            >
+              Sensor de Energia
+            </Button>
+            <Button
+              variant="outline"
+              icon={
+                <CriticalIcon
+                  {...(filterStatus === 'alert' && { fill: '#fff' })}
+                />
+              }
+              size={'lg'}
+              onClick={() =>
+                setFilterStatus(filterStatus === 'alert' ? null : 'alert')
+              }
+              active={filterStatus === 'alert'}
+              aria-pressed={filterStatus === 'alert'}
+              aria-label="Filtrar por status crítico"
+              className="max-sm:w-full"
+            >
+              Crítico
+            </Button>
+          </div>
+        </nav>
+
+        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:gap-4 h-full">
+          <div className="border border-gray-300 rounded-md h-full bg-white lg:max-w-[480px] w-full">
+            <div className="border-b bg-transparent border-gray-300">
+              <label htmlFor="search-input" className="sr-only">
+                Buscar Ativo ou Local
+              </label>
+              <input
+                value={searchTerms}
+                id="search-input"
+                className="bg-transparent p-2 w-full"
+                type="text"
+                placeholder="Buscar Ativo ou Local"
+                onChange={(e) => handleSearch(e.target.value)}
+                aria-label="Buscar Ativo ou Local"
+              />
+            </div>
+            <div className="p-4" role="tree" aria-label="Árvore de ativos">
+              <Suspense fallback={<LoadingPage />}>
+                <Tree
+                  data={filteredData}
+                  filters={{
+                    status: filterStatus,
+                    search: searchTerms,
+                  }}
+                  onSelectNode={setSelectedNode}
+                  selectedNode={selectedNode}
+                />
+              </Suspense>
+            </div>
+          </div>
+          <div className="border border-gray-300 rounded-md overflow-hidden min-h-0 bg-white w-full">
+            <AssetDetails node={selectedNode} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
