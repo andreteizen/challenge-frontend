@@ -33,11 +33,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const getCompanies = async () => {
     setLoading(true);
     try {
-      console.log('ENTROU NO GET COMPANIES');
       const url = process.env.NEXT_PUBLIC_TRACTIAN_API! + '/companies';
-      console.log('URL: ', url);
       const response = await fetch(url);
-      console.log('RESPONSE: ', response);
       const data = await response.json();
       setCompanies(data);
     } catch (error) {
