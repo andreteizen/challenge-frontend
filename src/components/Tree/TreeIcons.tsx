@@ -9,6 +9,6 @@ export const NodeIcon = (node: DeepNode) => {
     case 'location':
       return <Image alt="Localização" src={locationIcon} />;
     default:
-      return <Image alt="Localização" src={assetIcon} />;
+      return <Image alt="Ativo" src={assetIcon} />;
   }
 };

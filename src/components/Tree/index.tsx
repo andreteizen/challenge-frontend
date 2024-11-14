@@ -1,9 +1,20 @@
-import { memo, useEffect, useRef, useState, useCallback } from 'react';
+import { TreeProps, DeepNode } from '@/types/tree';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeList } from 'react-window';
-import { DeepNode, TreeProps } from '@/types/tree';
-import { filterTree, flattenTree } from './TreeUtils';
 import TreeNodeComponent from './TreeNode';
+import { filterTree, flattenTree } from './TreeUtils';
 
+/**
+ * A memoized React component that renders a tree structure using a virtualized list.
+ * It supports filtering, expanding/collapsing nodes, and selecting a node.
+ *
+ * @param {TreeProps} props - The properties for the Tree component.
+ * @param {DeepNode[]} props.data - The hierarchical data to be displayed in the tree.
+ * @param {any} props.filters - The filters to be applied to the tree data.
+ * @param {(nodeId: string) => void} props.onSelectNode - Callback function to handle node selection.
+ * @param {string} props.selectedNode - The ID of the currently selected node.
+ * @returns {JSX.Element} The rendered tree component.
+ */
 export default memo(function Tree({
   data,
   filters,

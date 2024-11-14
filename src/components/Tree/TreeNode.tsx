@@ -20,6 +20,18 @@ type TreeNodeProps = {
   selectedNode: TreeNode | null;
 };
 
+/**
+ * Renders a tree node component with expandable and selectable features.
+ *
+ * @param index - The index of the node in the flattened data array.
+ * @param flattenedData - An array of nodes representing the tree structure in a flattened form.
+ * @param style - CSS properties for styling the node.
+ * @param toggleNode - A function to toggle the expanded state of a node by its ID.
+ * @param expandedNodes - A set of node IDs that are currently expanded.
+ * @param onSelectNode - A callback function to handle node selection.
+ * @param selectedNode - The currently selected node, or null if no node is selected.
+ * @returns A JSX element representing a tree node.
+ */
 const TreeNodeComponent = ({
   index,
   flattenedData,
@@ -133,13 +145,6 @@ const TreeNodeComponent = ({
           onClick={() => {
             if (assetSensorType) {
               onSelectNode && onSelectNode(node);
-              // onSelectNode((prev) => {
-              //   if (prev?.id === node.id) {
-              //     onSelectNode && onSelectNode(null);
-              //     return null;
-              //   }
-              //   return node;
-              // });
             }
           }}
         >

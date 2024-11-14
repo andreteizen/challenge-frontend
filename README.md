@@ -15,10 +15,9 @@ Welcome to the Tree View Application! This project is a dynamic visualization to
     - Critical Sensor Status: Identify assets with critical sensor statuses.
 
 #### 2. Technology Stack
-- TailwindCSS: For design and styles.
-- ContextAPI: For state management.
 - Next.js: Framework for React applications.
 - TypeScript: Ensures type safety and better development experience.
+- ContextAPI: For state management.
 - TailwindCSS: For responsive and utility-first CSS design.
 - react-window: For efficient rendering of large lists and grids.
 
@@ -53,6 +52,6 @@ Welcome to the Tree View Application! This project is a dynamic visualization to
 #### 5. Future Improvements
 If more time were available, I would focus on:
 
+- Implement Skeleton Loading 
 - Implement unit and end-to-end (E2E) tests
 - Implement sorting option
-- Implement Skeleton Loading 
