@@ -1,13 +1,22 @@
-import { fetchCompanies } from '@/data/fetchCompanies';
 import { AssetNode, LocationNode, TreeNode } from '@/types/tree';
 
+/**
+ * Fetches and constructs a hierarchical tree structure of company data,
+ * including assets and locations, based on the provided company ID.
+ *
+ * @param companyId - The unique identifier of the company whose data is to be fetched.
+ * @returns A promise that resolves to an array of TreeNode objects representing
+ * the hierarchical structure of the company's assets and locations.
+ * @throws Will throw an error if the data fetching fails.
+ */
 export const fetchCompanyData = async (
   companyId: string
 ): Promise<TreeNode[]> => {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_TRACTIAN_API;
     const [assetsResponse, locationsResponse] = await Promise.all([
-      fetchCompanies(`/companies/${companyId}/assets`),
-      fetchCompanies(`/companies/${companyId}/locations`),
+      fetch(`${baseUrl}/companies/${companyId}/assets`),
+      fetch(`${baseUrl}/companies/${companyId}/locations`),
     ]);
 
     if (!assetsResponse.ok || !locationsResponse.ok) {

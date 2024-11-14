@@ -1,6 +1,13 @@
 import { TreeNode } from '@/types/tree';
 import Image from 'next/image';
 
+/**
+ * Displays detailed information about a specific asset.
+ *
+ * @param {Object} props - The properties object.
+ * @param {TreeNode | null} props.node - The node representing the asset to display details for. If null or undefined, a message prompting the user to select an asset is shown.
+ * @returns {JSX.Element} A component that renders the asset details or a message if no asset is selected.
+ */
 export default function AssetDetails({ node }: { node?: TreeNode | null }) {
   if (!node) {
     return (

@@ -22,6 +22,15 @@ interface CompanyContextType {
 
 const CompanyContext = createContext({} as CompanyContextType);
 
+/**
+ * Provides the company context to its children components.
+ * It manages the state of the current company, the list of companies,
+ * and the loading state while fetching company data.
+ *
+ * @param {Object} props - The properties object.
+ * @param {ReactNode} props.children - The child components that will have access to the company context.
+ * @returns {JSX.Element} The provider component that wraps its children with the company context.
+ */
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
